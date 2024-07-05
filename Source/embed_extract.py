@@ -18,8 +18,14 @@ def resize_watermark(container, watermark):
     return cv2.resize(watermark, (container.shape[1], container.shape[0]), interpolation=cv2.INTER_NEAREST)
 
 
-# Embedding function
 def embed_watermark(container, watermark, method):
+    """
+    Embed watermark to image
+    :param container: container
+    :param watermark: binary image
+    :param method: method will be used for embedding
+    :return: Image after embedding
+    """
     resized_watermark = resize_watermark(container, watermark)
 
     watermarked = np.copy(container)
@@ -38,6 +44,14 @@ def embed_watermark(container, watermark, method):
 
 # Extraction function
 def extract_watermark(watermarked, container, original_watermark_size, method):
+    """
+    Extract watermark image from 1 image
+    :param watermarked: Image need to be extracted
+    :param container: container
+    :param original_watermark_size: size watermark image
+    :param method: method was used when embed
+    :return: watermark image
+    """
     extracted = np.copy(watermarked)
 
     if method == direct_replacement:

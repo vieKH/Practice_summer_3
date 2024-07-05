@@ -14,7 +14,6 @@ def negated_bitwise_addition(container_pixel, watermark_pixel):
     return ~(container_pixel ^ watermark_pixel) & 0xFF
 
 
-# Resize watermark to match container dimensions
 def resize_watermark(container, watermark):
     return cv2.resize(watermark, (container.shape[1], container.shape[0]), interpolation=cv2.INTER_NEAREST)
 

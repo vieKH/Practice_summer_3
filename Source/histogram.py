@@ -53,8 +53,8 @@ def plot_histograms(original_img: np.ndarray, watermarked_img: np.ndarray):
 
 
 if __name__ == "__main__":
-    original_image_path = 'E:/Study/pythonProject/Image/Original/1.png'
+    empty_path = 'E:/Study/pythonProject/Image/Original/empty.png'
     watermarked_image_path = 'E:/Study/pythonProject/Image/test.png'
-    original_img = cv2.imread(original_image_path, cv2.IMREAD_UNCHANGED)
+    empty_img = cv2.imread(original_image_path, cv2.IMREAD_UNCHANGED)
     watermarked_img = cv2.imread(watermarked_image_path, cv2.IMREAD_UNCHANGED)
-    plot_histograms(original_img, watermarked_img)
+    plot_histograms(empty_img, watermarked_img)

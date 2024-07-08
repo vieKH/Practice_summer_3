@@ -5,9 +5,8 @@ import sys
 from enum import Enum
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtGui import QPixmap, QImage
-from PyQt6.QtWidgets import QPushButton, QFileDialog, QApplication, QMainWindow, QLabel, QComboBox
-from embed_extract import embed_watermark, extract_watermark, direct_replacement, bitwise_addition,\
-    negated_bitwise_addition
+from PyQt6.QtWidgets import QPushButton, QFileDialog, QApplication, QMainWindow, QLabel, QComboBox, QMessageBox
+from embed_extract import embed_watermark, extract_watermark, Method
 from histogram import plot_histograms
 
 
@@ -17,6 +16,21 @@ class Option(Enum):
     EXTRACT = 3
     EMBED = 4
     EXTRACTED = 5
+
+
+def show_error(message: str) -> None:
+    """
+    Show message error in new box
+    :param message: message error
+    :return: None
+    """
+    error_dialog = QMessageBox()
+    error_dialog.setIcon(QMessageBox.Icon.Critical)
+    error_dialog.setWindowTitle("Error")
+    error_dialog.setText("An error has occurred.")
+    error_dialog.setInformativeText(message)
+    error_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
+    error_dialog.exec()
 
 
 class MainWindow(QMainWindow):
@@ -30,7 +44,7 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1000, 700)
 
         self.path_original, self.path_watermark, self.path_extract = '', '', ''
-        self.embedded, self.extracted, self.method = '', '', direct_replacement
+        self.embedded, self.extracted, self.method = '', '', Method.DIRECT
 
         button_crt_upfile_ori = self.add_button("Upload original image", 150, 50, 50, 100)
         button_crt_upfile_ori.clicked.connect(lambda: self.upload_file("Original image", Option.ORIGINAL))
@@ -103,20 +117,20 @@ class MainWindow(QMainWindow):
         button.move(pos_x, pos_y)
         return button
 
-    def update_method(self, text: str):
+    def update_method(self, text: str) -> None:
         """
         Get data from user, set parameter self.method
         :param text: Data from user
         :return: None
         """
         if text == "Direct replacement":
-            self.method = direct_replacement
+            self.method = Method.DIRECT
         elif text == "Bitwise addition":
-            self.method = bitwise_addition
+            self.method = Method.BITWISE_ADD
         else:
-            self.method = negated_bitwise_addition
+            self.method = Method.NEGATED_BITWISE_ADD
 
-    def upload_file(self, title: str, option: Option):
+    def upload_file(self, title: str, option: Option) -> None:
         """
         Choose file from computer, this function use for 3 options
         :param title: title for every option
@@ -138,7 +152,7 @@ class MainWindow(QMainWindow):
                         self.path_extract = file_path
                         self.label_image_extracted.setText(f'Path to image need to extracted: {self.path_extract}')
         except Exception as e:
-            print(f"Error selecting file: {e}")
+            show_error(f"Error selecting file: {e} !!!")
 
     def print_image(self, image_array: np.ndarray):
         """
@@ -147,41 +161,50 @@ class MainWindow(QMainWindow):
         :return: None
         """
         try:
-            height, width, channel = image_array.shape
+            image_array_rgb = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
+            height, width, channel = image_array_rgb.shape
             bytes_per_line = 3 * width
-            image = QImage(image_array.data, width, height, bytes_per_line, QImage.Format.Format_RGB888)
+            image = QImage(image_array_rgb.data, width, height, bytes_per_line, QImage.Format.Format_RGB888)
             pixmap = QPixmap.fromImage(image).scaled(self.image.height(),
                                                      self.image.width(),
                                                      aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio)
             self.image.setPixmap(pixmap)
             self.resize(pixmap.size())
             self.adjustSize()
-        except OSError as err:
-            print(f"Something was wrong when we try print image: {err}")
+        except Exception as err:
+            show_error(f"Something was wrong when we try print image: {err} !!!")
 
-    def interface_embed(self):
+    def interface_embed(self) -> None:
         """
         Embed 2 image by button
         :return: None
         """
-        container = cv2.imread(self.path_original, cv2.IMREAD_UNCHANGED)
-        watermark = cv2.imread(self.path_watermark, cv2.IMREAD_GRAYSCALE)
-        self.embedded = embed_watermark(container, watermark, method=self.method)
-        self.print_image(self.embedded)
+        try:
+            container = cv2.imread(self.path_original, cv2.IMREAD_UNCHANGED)
+            watermark = cv2.imread(self.path_watermark, cv2.IMREAD_GRAYSCALE)
+            _, watermark = cv2.threshold(watermark, 127, 255, cv2.THRESH_BINARY)
+            self.embedded = embed_watermark(container, watermark, method=self.method)
+            self.print_image(self.embedded)
+        except Exception as err:
+            show_error(f"Error in embedding {err}")
 
-    def interface_extract(self):
+    def interface_extract(self) -> None:
         """
         Extract watermark image from image
         :return: None
         """
-        watermarked = cv2.imread(self.path_extract, cv2.IMREAD_UNCHANGED)
-        container = cv2.imread(self.path_original, cv2.IMREAD_UNCHANGED)
-        watermark = cv2.imread(self.path_watermark, cv2.IMREAD_GRAYSCALE)
-        watermark_size = (watermark.shape[1], watermark.shape[0])
-        self.extracted = extract_watermark(watermarked, container, watermark_size, method=self.method)
-        self.print_image(self.extracted)
+        try:
+            watermarked = cv2.imread(self.path_extract, cv2.IMREAD_UNCHANGED)
+            container = cv2.imread(self.path_original, cv2.IMREAD_UNCHANGED)
+            watermark = cv2.imread(self.path_watermark, cv2.IMREAD_GRAYSCALE)
+            _, watermark = cv2.threshold(watermark, 127, 255, cv2.THRESH_BINARY)
+            watermark_size = (watermark.shape[1], watermark.shape[0])
+            self.extracted = extract_watermark(watermarked, container, watermark_size, method=self.method)
+            self.print_image(self.extracted)
+        except Exception as err:
+            show_error(f"Error in extraction {err}")
 
-    def save_file(self, option: Option):
+    def save_file(self, option: Option) -> None:
         """
         Save file in computer
         :param option: option
@@ -194,15 +217,15 @@ class MainWindow(QMainWindow):
                     cv2.imwrite(save_path, self.embedded)
                 if option == Option.EXTRACTED:
                     cv2.imwrite(save_path, self.extracted)
-        except OSError as err:
-            print(f"Error in function save_file: {err}")
+        except Exception as err:
+            show_error(f"Something was wrong when we try to save file: {err} !!!")
 
-    def interface_histogram(self):
-        original_img = cv2.imread(self.path_original, cv2.IMREAD_UNCHANGED)
+    def interface_histogram(self) -> None:
         try:
+            original_img = cv2.imread(self.path_original, cv2.IMREAD_UNCHANGED)
             plot_histograms(original_img, self.embedded)
-        except OSError as err:
-            print(f"Something was wrong when we try to draw histogram: {err}")
+        except Exception as err:
+            show_error(f"Something was wrong when we try to draw histogram: {err} !!!")
 
 
 if __name__ == "__main__":

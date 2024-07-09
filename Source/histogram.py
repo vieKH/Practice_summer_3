@@ -2,59 +2,40 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-def plot_histograms(original_img: np.ndarray, watermarked_img: np.ndarray):
+def plot_histogram(image: np.ndarray):
     """
-    Draw 2 histogram (Pixel value and Frequency) of original and watermarked image
-    :param original_img: array data from original image
-    :param watermarked_img: array data from watermarked image
+    Draw histograms (Pixel value and Frequency) of an image.
+    :param image: array data from image
     :return: None
     """
-    # Check if images are loaded successfully
-    if original_img is None:
-        raise FileNotFoundError(f"Original image at path {original_image_path} could not be loaded")
-    if watermarked_img is None:
-        raise FileNotFoundError(f"Watermarked image at path {watermarked_image_path} could not be loaded")
+    # Check if image is loaded successfully
+    if image is None:
+        raise FileNotFoundError("Image could not be loaded")
 
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    # Create a figure
+    fig, ax = plt.subplots(figsize=(7, 5))
 
-    if original_img.ndim == 2:  # Grayscale
-        hist = cv2.calcHist([original_img], [0], None, [256], [0, 256])
-        axes[0].plot(hist, color='black')
-        axes[0].set_title('Grayscale Histogram: Original Image')
-        axes[0].set_xlim([0, 256])
-    elif original_img.ndim == 3:  # RGB
+    # Check if image is grayscale or RGB
+    if image.ndim == 2:  # Grayscale
+        hist = cv2.calcHist([image], [0], None, [256], [0, 256]).flatten()
+        ax.bar(range(256), hist, color='black')
+        ax.set_title('Grayscale Histogram')
+        ax.set_xlim([0, 256])
+    elif image.ndim == 3:  # RGB
         colors = ('b', 'g', 'r')
         for i, color in enumerate(colors):
-            hist = cv2.calcHist([original_img], [i], None, [256], [0, 256])
-            axes[0].plot(hist, color=color)
-        axes[0].set_title('RGB Histogram: Original Image')
-        axes[0].set_xlim([0, 256])
+            hist = cv2.calcHist([image], [i], None, [256], [0, 256]).flatten()
+            ax.bar(range(256), hist, color=color, alpha=0.5, label=color)
+        ax.set_title('RGB Histogram')
+        ax.set_xlim([0, 256])
+        ax.legend()
 
-    if watermarked_img.ndim == 2:
-        hist = cv2.calcHist([watermarked_img], [0], None, [256], [0, 256])
-        axes[1].plot(hist, color='black')
-        axes[1].set_title('Grayscale Histogram: Watermarked Image')
-        axes[1].set_xlim([0, 256])
-    elif watermarked_img.ndim == 3:
-        colors = ('b', 'g', 'r')
-        for i, color in enumerate(colors):
-            hist = cv2.calcHist([watermarked_img], [i], None, [256], [0, 256])
-            axes[1].plot(hist, color=color)
-        axes[1].set_title('RGB Histogram: Watermarked Image')
-        axes[1].set_xlim([0, 256])
-
-    for ax in axes:
-        ax.set_xlabel('Pixel value')
-        ax.set_ylabel('Frequency')
-
+    ax.set_xlabel('Pixel value')
+    ax.set_ylabel('Frequency')
     plt.tight_layout()
     plt.show()
 
-
 if __name__ == "__main__":
-    empty_path = 'E:/Study/pythonProject/Image/Original/empty.png'
-    watermarked_image_path = 'E:/Study/pythonProject/Image/test.png'
-    empty_img = cv2.imread(original_image_path, cv2.IMREAD_UNCHANGED)
-    watermarked_img = cv2.imread(watermarked_image_path, cv2.IMREAD_UNCHANGED)
-    plot_histograms(empty_img, watermarked_img)
+    image_path = 'E:/Study/pythonProject/Image/Original/1.png'
+    image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+    plot_histogram(image)

@@ -7,7 +7,7 @@ from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtWidgets import QPushButton, QFileDialog, QApplication, QMainWindow, QLabel, QComboBox, QMessageBox
 from embed_extract import embed_watermark, extract_watermark, Method
-from histogram import plot_histograms
+from histogram import plot_histogram
 
 
 class Option(Enum):
@@ -16,6 +16,8 @@ class Option(Enum):
     EXTRACT = 3
     EMBED = 4
     EXTRACTED = 5
+    HIS_ORI = 6
+    HIS_EMB = 7
 
 
 def show_error(message: str) -> None:
@@ -76,8 +78,11 @@ class MainWindow(QMainWindow):
         button_crt_save_extracted = self.add_button("Save binary image after extracting", 300, 50, 50, 475)
         button_crt_save_extracted.clicked.connect(lambda: self.save_file(Option.EXTRACTED))
 
-        button_crt_his = self.add_button("Histogram", 300, 50, 50, 550)
-        button_crt_his.clicked.connect(self.interface_histogram)
+        button_crt_his = self.add_button("Histogram Original", 150, 50, 50, 550)
+        button_crt_his.clicked.connect(lambda: self.interface_histogram(Option.HIS_ORI))
+
+        button_crt_his = self.add_button("Histogram aft embedding", 150, 50, 200, 550)
+        button_crt_his.clicked.connect(lambda: self.interface_histogram(Option.HIS_EMB))
 
         self.image = QLabel("The results will appear here", self)
         self.image.setStyleSheet("color: #800000")
@@ -220,10 +225,14 @@ class MainWindow(QMainWindow):
         except Exception as err:
             show_error(f"Something was wrong when we try to save file: {err} !!!")
 
-    def interface_histogram(self) -> None:
+    def interface_histogram(self, option: Option) -> None:
         try:
-            original_img = cv2.imread(self.path_original, cv2.IMREAD_UNCHANGED)
-            plot_histograms(original_img, self.embedded)
+            match option:
+                case Option.HIS_EMB:
+                    plot_histogram(self.embedded)
+                case Option.HIS_ORI:
+                    original_img = cv2.imread(self.path_original, cv2.IMREAD_UNCHANGED)
+                    plot_histogram(original_img)
         except Exception as err:
             show_error(f"Something was wrong when we try to draw histogram: {err} !!!")
 

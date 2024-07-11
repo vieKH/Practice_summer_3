@@ -10,6 +10,7 @@ from embed_extract import embed_watermark, extract_watermark, Method
 from histogram import plot_histogram
 
 
+
 class Option(Enum):
     ORIGINAL = 1
     WATERMARK = 2
@@ -18,6 +19,7 @@ class Option(Enum):
     EXTRACTED = 5
     HIS_ORI = 6
     HIS_EMB = 7
+
 
 
 def show_error(message: str) -> None:
@@ -83,6 +85,8 @@ class MainWindow(QMainWindow):
 
         button_crt_his = self.add_button("Histogram aft embedding", 150, 50, 200, 550)
         button_crt_his.clicked.connect(lambda: self.interface_histogram(Option.HIS_EMB))
+
+
 
         self.image = QLabel("The results will appear here", self)
         self.image.setStyleSheet("color: #800000")
@@ -233,6 +237,7 @@ class MainWindow(QMainWindow):
                 case Option.HIS_ORI:
                     original_img = cv2.imread(self.path_original, cv2.IMREAD_UNCHANGED)
                     plot_histogram(original_img)
+
         except Exception as err:
             show_error(f"Something was wrong when we try to draw histogram: {err} !!!")
 

@@ -226,6 +226,11 @@ class MainWindow(QMainWindow):
             show_error(f"Something was wrong when we try to save file: {err} !!!")
 
     def interface_histogram(self, option: Option) -> None:
+        """
+        Draw histogram original image or image after embedding
+        :param option: choose original image or image after embedding
+        :return: None
+        """
         try:
             match option:
                 case Option.HIS_EMB:
